@@ -17,12 +17,18 @@ using Windows.Storage;
 using System.Threading.Tasks;
 using Windows.Storage.Streams;
 using Windows.Graphics.Imaging;
-using Windows.Storage.Streams;
-using Windows.Graphics.Imaging;
+
 using Windows.UI.Xaml.Media.Imaging;
 
-using System;
-using System.IO;
+//Aforge to directly take input devices by name
+//using AForge.Video;
+//using AForge.Video.DirectShow;
+
+using Windows.Media.MediaProperties;
+
+
+
+
 using System.Net.Http.Headers;
 using System.Net.Http;
 
@@ -37,81 +43,50 @@ namespace SimpleCameraApp
     /// </summary>
     public sealed partial class MainPage : Page
     {
-
-
-
         public MainPage()
         {
             this.InitializeComponent();
-
-
         }
-        private async Task CapturePic()
+
+        private MediaCapture capture = new MediaCapture();
+
+        private async void PreviewButton_Click_1(object sender, RoutedEventArgs e)
         {
-            var camera = new CameraCaptureUI();
-            StorageFile file = await camera.CaptureFileAsync(CameraCaptureUIMode.Photo);
-            if (file == null)
-            {
-                return;
-            }
-
-            using (IRandomAccessStream imageStream = await file.OpenAsync(FileAccessMode.Read))
-            {
-                // Load the stream into a BitmapImage
-                BitmapImage source = new BitmapImage();
-                source.SetSource(imageStream);
-
-                this.Image1.Source = source;
-
-            }
-
-            //We need to give MakeDetectRequest(file); the path name
+                
+                var media = new MediaCaptureInitializationSettings();
+                await this.capture.InitializeAsync(media);
+                this.Capture1.Source = capture;
+                await this.capture.StartPreviewAsync();
 
         }
 
-
-        private async void Pic_Click(object sender, RoutedEventArgs e)
+        private async Task TakePhoto()
         {
-            await CapturePic();
 
+                // Capture a image into a new stream
+                ImageEncodingProperties properties = ImageEncodingProperties.CreateJpeg();
+                using (IRandomAccessStream ras = new InMemoryRandomAccessStream())
+                {
 
+                    await this.capture.CapturePhotoToStreamAsync(properties, ras);
+                    await ras.FlushAsync();
+
+                    // Load the image into a BitmapImage
+                    ras.Seek(0);
+                    var picLocation = new BitmapImage();
+                    picLocation.SetSource(ras);
+
+                    //place into listview
+                    var img = new Image() { Width = 200, Height = 158 };
+                    img.Source = picLocation;
+                    ListView1.Items.Add(img);
+
+                }
         }
 
-        static byte[] GetImageAsByteArray(string imageFilePath)
+        private async void Photo_Click(object sender, RoutedEventArgs e)
         {
-            FileStream fileStream = new FileStream(imageFilePath, FileMode.Open, FileAccess.Read);
-            BinaryReader binaryReader = new BinaryReader(fileStream);
-            return binaryReader.ReadBytes((int)fileStream.Length);
-        }
-
-        static async void MakeDetectRequest(string imageFilePath)
-        {
-            var client = new HttpClient();
-
-            // Request headers - replace this example key with your valid key.
-            client.DefaultRequestHeaders.Add("Ocp-Apim-Subscription-Key", "af343b3eafef43d0987a3d1a9ebf2448");
-
-            // Request parameters and URI string.
-            string queryString = "returnFaceId=true&returnFaceLandmarks=false&returnFaceAttributes=age,gender";
-            string uri = "https://westus.api.cognitive.microsoft.com/face/v1.0/detect?" + queryString;
-
-            HttpResponseMessage response;
-            string responseContent;
-
-            // Request body. Try this sample with a locally stored JPEG image.
-            byte[] byteData = GetImageAsByteArray(imageFilePath);
-
-            using (var content = new ByteArrayContent(byteData))
-            {
-                // This example uses content type "application/octet-stream".
-                // The other content types you can use are "application/json" and "multipart/form-data".
-                content.Headers.ContentType = new MediaTypeHeaderValue("application/octet-stream");
-                response = await client.PostAsync(uri, content);
-                responseContent = response.Content.ReadAsStringAsync().Result;
-            }
-
-            //A peak at the JSON response.
-            //Console.WriteLine(responseContent);
+            await TakePhoto();
         }
     }
 }
