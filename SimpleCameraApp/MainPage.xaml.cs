@@ -17,18 +17,10 @@ using Windows.Storage;
 using System.Threading.Tasks;
 using Windows.Storage.Streams;
 using Windows.Graphics.Imaging;
-using Windows.Storage.Streams;
-using Windows.Graphics.Imaging;
 using Windows.UI.Xaml.Media.Imaging;
-
-using System;
-using System.IO;
+using Windows.Media.MediaProperties;
 using System.Net.Http.Headers;
 using System.Net.Http;
-
-
-
-// The Blank Page item template is documented at https://go.microsoft.com/fwlink/?LinkId=402352&clcid=0x409
 
 namespace SimpleCameraApp
 {
@@ -37,82 +29,98 @@ namespace SimpleCameraApp
     /// </summary>
     public sealed partial class MainPage : Page
     {
-
-
+        //StorageFolder appInstalledFolder = Windows.ApplicationModel.Package.Current.InstalledLocation;
+        //StorageFolder assets = await appInstalledFolder.GetFolderAsync("Assets");
+        private MediaCapture capture = new MediaCapture();
+        public BitmapImage bImage;
+        public IRandomAccessStream stream;
+        StorageFolder local = ApplicationData.Current.LocalCacheFolder;
+        private string imageFileName;
+        private int imageFileNumber=0;
+        private string path;
 
         public MainPage()
         {
             this.InitializeComponent();
+        }
+        
+        private void PreviewButton_Click_1(object sender, RoutedEventArgs e)
+        {
+            PreviewButton.IsEnabled = false;
+            preview();
+        }
+
+        private async void Photo_Click(object sender, RoutedEventArgs e)
+        {
+
+            await TakePhoto();
+
 
 
         }
-        private async Task CapturePic()
+        private void usePhoto_Click(object sender, RoutedEventArgs e)
         {
-            var camera = new CameraCaptureUI();
-            StorageFile file = await camera.CaptureFileAsync(CameraCaptureUIMode.Photo);
-            if (file == null)
-            {
-                return;
+            faceApiCall call = new faceApiCall("C:\\Users\\USER\\AppData\\Local\\Packages\\e6204497-620b-4f81-ab82-fbd8d000332b_x3hap7anq5jnt\\LocalCache\\"+imageFileName);
+            var a = call.getResponseJSON();
+            System.Diagnostics.Debug.WriteLine(a);
+        }
+
+        public async void preview()
+        {
+            var media = new MediaCaptureInitializationSettings();
+            await this.capture.InitializeAsync(media);
+            this.Capture1.Source = capture;
+            await this.capture.StartPreviewAsync();
+        }
+
+        private async Task TakePhoto()
+        {
+            // Capture a image into a new stream
+            ImageEncodingProperties properties = ImageEncodingProperties.CreateJpeg();
+                using (IRandomAccessStream ras = new InMemoryRandomAccessStream())
+                {
+
+
+                await this.capture.CapturePhotoToStreamAsync(properties, ras);
+                    await ras.FlushAsync();
+
+                    // Load the image into a BitmapImage
+                    ras.Seek(0);
+                    var picLocation = new BitmapImage();
+                    picLocation.SetSource(ras);
+
+                    //place into listview
+                    var img = new Image() { Width = 200, Height = 158 };                
+                    img.Source = picLocation;
+                    Image1.Source = picLocation;
+                    ListView1.Items.Add(img);
+                    stream = ras;
+                    saveFile();
+
             }
-
-            using (IRandomAccessStream imageStream = await file.OpenAsync(FileAccessMode.Read))
-            {
-                // Load the stream into a BitmapImage
-                BitmapImage source = new BitmapImage();
-                source.SetSource(imageStream);
-
-                this.Image1.Source = source;
-
-            }
-
-            //We need to give MakeDetectRequest(file); the path name
+            
 
         }
-
-
-        private async void Pic_Click(object sender, RoutedEventArgs e)
+        public async void saveFile()
         {
-            await CapturePic();
+            imageFileName = "apereImage" + imageFileNumber + ".jpg";
+            imageFileNumber += 1;
+            //Save: Start by copying the stream and loading it into a decoder
+            BitmapDecoder decoder = await BitmapDecoder.CreateAsync(stream.CloneStream());
+            SoftwareBitmap softBitmap = await decoder.GetSoftwareBitmapAsync();
+            //To actually save, we need to encode it. This first line creates a file with name image1.jpg and replaces the image if it exists
+            StorageFile saveFile = await local.CreateFileAsync(imageFileName, CreationCollisionOption.ReplaceExisting);
+            //Bitmap encoder encode in jpeg, specify it to the stream above "saveFile" openasync allows me to write to this stream
+            BitmapEncoder encoder = await BitmapEncoder.CreateAsync(Windows.Graphics.Imaging.BitmapEncoder.JpegEncoderId, await saveFile.OpenAsync(FileAccessMode.ReadWrite));
+            encoder.SetSoftwareBitmap(softBitmap);
+            await encoder.FlushAsync();
+            FileInfo f = new FileInfo(imageFileName);
+            path = f.FullName;
+            System.Diagnostics.Debug.WriteLine(f.FullName);
 
 
         }
 
-        static byte[] GetImageAsByteArray(string imageFilePath)
-        {
-            FileStream fileStream = new FileStream(imageFilePath, FileMode.Open, FileAccess.Read);
-            BinaryReader binaryReader = new BinaryReader(fileStream);
-            return binaryReader.ReadBytes((int)fileStream.Length);
-        }
-
-        static async void MakeDetectRequest(string imageFilePath)
-        {
-            var client = new HttpClient();
-
-            // Request headers - replace this example key with your valid key.
-            client.DefaultRequestHeaders.Add("Ocp-Apim-Subscription-Key", "af343b3eafef43d0987a3d1a9ebf2448");
-
-            // Request parameters and URI string.
-            string queryString = "returnFaceId=true&returnFaceLandmarks=false&returnFaceAttributes=age,gender";
-            string uri = "https://westus.api.cognitive.microsoft.com/face/v1.0/detect?" + queryString;
-
-            HttpResponseMessage response;
-            string responseContent;
-
-            // Request body. Try this sample with a locally stored JPEG image.
-            byte[] byteData = GetImageAsByteArray(imageFilePath);
-
-            using (var content = new ByteArrayContent(byteData))
-            {
-                // This example uses content type "application/octet-stream".
-                // The other content types you can use are "application/json" and "multipart/form-data".
-                content.Headers.ContentType = new MediaTypeHeaderValue("application/octet-stream");
-                response = await client.PostAsync(uri, content);
-                responseContent = response.Content.ReadAsStringAsync().Result;
-            }
-
-            //A peak at the JSON response.
-            //Console.WriteLine(responseContent);
-        }
     }
 }
 
