@@ -17,24 +17,10 @@ using Windows.Storage;
 using System.Threading.Tasks;
 using Windows.Storage.Streams;
 using Windows.Graphics.Imaging;
-
 using Windows.UI.Xaml.Media.Imaging;
-
-//Aforge to directly take input devices by name
-//using AForge.Video;
-//using AForge.Video.DirectShow;
-
 using Windows.Media.MediaProperties;
-
-
-
-
 using System.Net.Http.Headers;
 using System.Net.Http;
-
-
-
-// The Blank Page item template is documented at https://go.microsoft.com/fwlink/?LinkId=402352&clcid=0x409
 
 namespace SimpleCameraApp
 {
@@ -43,32 +29,59 @@ namespace SimpleCameraApp
     /// </summary>
     public sealed partial class MainPage : Page
     {
+        //StorageFolder appInstalledFolder = Windows.ApplicationModel.Package.Current.InstalledLocation;
+        //StorageFolder assets = await appInstalledFolder.GetFolderAsync("Assets");
+        private MediaCapture capture = new MediaCapture();
+        public BitmapImage bImage;
+        public IRandomAccessStream stream;
+        StorageFolder local = ApplicationData.Current.LocalCacheFolder;
+        private string imageFileName;
+        private int imageFileNumber=0;
+        private string path;
+
         public MainPage()
         {
             this.InitializeComponent();
         }
-
-        private MediaCapture capture = new MediaCapture();
-
-        private async void PreviewButton_Click_1(object sender, RoutedEventArgs e)
+        
+        private void PreviewButton_Click_1(object sender, RoutedEventArgs e)
         {
-                
-                var media = new MediaCaptureInitializationSettings();
-                await this.capture.InitializeAsync(media);
-                this.Capture1.Source = capture;
-                await this.capture.StartPreviewAsync();
+            PreviewButton.IsEnabled = false;
+            preview();
+        }
 
+        private async void Photo_Click(object sender, RoutedEventArgs e)
+        {
+
+            await TakePhoto();
+
+
+
+        }
+        private void usePhoto_Click(object sender, RoutedEventArgs e)
+        {
+            faceApiCall call = new faceApiCall("C:\\Users\\USER\\AppData\\Local\\Packages\\e6204497-620b-4f81-ab82-fbd8d000332b_x3hap7anq5jnt\\LocalCache\\"+imageFileName);
+            var a = call.getResponseJSON();
+            System.Diagnostics.Debug.WriteLine(a);
+        }
+
+        public async void preview()
+        {
+            var media = new MediaCaptureInitializationSettings();
+            await this.capture.InitializeAsync(media);
+            this.Capture1.Source = capture;
+            await this.capture.StartPreviewAsync();
         }
 
         private async Task TakePhoto()
         {
-
-                // Capture a image into a new stream
-                ImageEncodingProperties properties = ImageEncodingProperties.CreateJpeg();
+            // Capture a image into a new stream
+            ImageEncodingProperties properties = ImageEncodingProperties.CreateJpeg();
                 using (IRandomAccessStream ras = new InMemoryRandomAccessStream())
                 {
 
-                    await this.capture.CapturePhotoToStreamAsync(properties, ras);
+
+                await this.capture.CapturePhotoToStreamAsync(properties, ras);
                     await ras.FlushAsync();
 
                     // Load the image into a BitmapImage
@@ -77,17 +90,37 @@ namespace SimpleCameraApp
                     picLocation.SetSource(ras);
 
                     //place into listview
-                    var img = new Image() { Width = 200, Height = 158 };
+                    var img = new Image() { Width = 200, Height = 158 };                
                     img.Source = picLocation;
+                    Image1.Source = picLocation;
                     ListView1.Items.Add(img);
+                    stream = ras;
+                    saveFile();
 
-                }
+            }
+            
+
         }
-
-        private async void Photo_Click(object sender, RoutedEventArgs e)
+        public async void saveFile()
         {
-            await TakePhoto();
+            imageFileName = "apereImage" + imageFileNumber + ".jpg";
+            imageFileNumber += 1;
+            //Save: Start by copying the stream and loading it into a decoder
+            BitmapDecoder decoder = await BitmapDecoder.CreateAsync(stream.CloneStream());
+            SoftwareBitmap softBitmap = await decoder.GetSoftwareBitmapAsync();
+            //To actually save, we need to encode it. This first line creates a file with name image1.jpg and replaces the image if it exists
+            StorageFile saveFile = await local.CreateFileAsync(imageFileName, CreationCollisionOption.ReplaceExisting);
+            //Bitmap encoder encode in jpeg, specify it to the stream above "saveFile" openasync allows me to write to this stream
+            BitmapEncoder encoder = await BitmapEncoder.CreateAsync(Windows.Graphics.Imaging.BitmapEncoder.JpegEncoderId, await saveFile.OpenAsync(FileAccessMode.ReadWrite));
+            encoder.SetSoftwareBitmap(softBitmap);
+            await encoder.FlushAsync();
+            FileInfo f = new FileInfo(imageFileName);
+            path = f.FullName;
+            System.Diagnostics.Debug.WriteLine(f.FullName);
+
+
         }
+
     }
 }
 

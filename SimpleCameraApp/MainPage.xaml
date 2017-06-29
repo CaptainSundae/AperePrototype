@@ -18,6 +18,7 @@
         <ListView x:Name="ListView1" HorizontalAlignment="Right" Height="158" VerticalAlignment="Top" Width="200" Margin="0,114,11,0"/>
         <Button x:Name="PreviewButton" Content="Preview" Margin="1198,277,0,411" Click="PreviewButton_Click_1"/>
         <Button x:Name="Photo" Content="Photo" Margin="1295,277,-75,411" Click="Photo_Click"/>
+        <Button x:Name="usePhoto" Content="Use this photo?" Click="usePhoto_Click" Margin="1198,342,-41,346"/>
         <TextBlock HorizontalAlignment="Left" Height="49" Margin="431,30,0,0" TextWrapping="Wrap" Text="Check Dat sick UI" VerticalAlignment="Top" Width="288" FontSize="36"/>
         <TextBlock HorizontalAlignment="Left" Margin="1069,34,0,0" TextWrapping="Wrap" VerticalAlignment="Top" FontSize="20">
             <Run Text="Pictures go "/>
@@ -25,6 +26,9 @@
             <Run Text="here. Note the S"/>
         </TextBlock>
         <Grid HorizontalAlignment="Left" Height="100" VerticalAlignment="Top" Width="100"/>
+        <Image Name="Image1" HorizontalAlignment="Left" Height="100" Margin="1121,424,0,0" VerticalAlignment="Top" Width="100"/>
+        <TextBlock Name="faceDetails" HorizontalAlignment="Left" Height="63" Margin="925,575,0,0" TextWrapping="Wrap" Text="TextBlock" VerticalAlignment="Top" Width="264"/>
+
 
 
     </Grid>
