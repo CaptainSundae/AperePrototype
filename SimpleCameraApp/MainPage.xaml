@@ -8,26 +8,71 @@
     mc:Ignorable="d">
 
     <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="1*"/>
+            <RowDefinition Height="6*"/>
+            <RowDefinition Height="2*"/>
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="1*"/>
+            <ColumnDefinition Width="4*"/>
+            <ColumnDefinition Width="2*"/>
+        </Grid.ColumnDefinitions>
 
-
-        <TextBlock x:Name="Debug" HorizontalAlignment="Left" Height="39" Margin="0,725,0,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Width="400"/>
-        <CaptureElement x:Name="Capture1" Stretch="UniformToFill" Margin="177,84,339,150"/>
-
-
-
-        <ListView x:Name="ListView1" HorizontalAlignment="Right" Height="158" VerticalAlignment="Top" Width="200" Margin="0,114,11,0"/>
-        <Button x:Name="PreviewButton" Content="Preview" Margin="1198,277,0,411" Click="PreviewButton_Click_1"/>
-        <Button x:Name="Photo" Content="Photo" Margin="1295,277,-75,411" Click="Photo_Click"/>
-        <Button x:Name="usePhoto" Content="Use this photo?" Click="usePhoto_Click" Margin="1198,342,-41,346"/>
-        <TextBlock HorizontalAlignment="Left" Height="49" Margin="431,30,0,0" TextWrapping="Wrap" Text="Check Dat sick UI" VerticalAlignment="Top" Width="288" FontSize="36"/>
-        <TextBlock HorizontalAlignment="Left" Margin="1069,34,0,0" TextWrapping="Wrap" VerticalAlignment="Top" FontSize="20">
-            <Run Text="Pictures go "/>
-            <Run Text="somewhere around "/>
-            <Run Text="here. Note the S"/>
+        <!--Header-->
+        <TextBlock x:Name="Title" Grid.Row="0" Grid.Column="1" HorizontalAlignment="Left"  Height="55" TextWrapping="Wrap" VerticalAlignment="Top" Width="793" FontSize="30" Margin="20,15,0,0" FontFamily="Arial" FontWeight="Bold" Grid.ColumnSpan="2" Grid.RowSpan="2">
+            <Run Text="Auckland Library"/>
+            <Run Text=" "/>
+            <Run Text="Book Recommendation System"/>
         </TextBlock>
-        <Grid HorizontalAlignment="Left" Height="100" VerticalAlignment="Top" Width="100"/>
-        <Image Name="Image1" HorizontalAlignment="Left" Height="100" Margin="1121,424,0,0" VerticalAlignment="Top" Width="100"/>
-        <TextBlock Name="faceDetails" HorizontalAlignment="Left" Height="63" Margin="925,575,0,0" TextWrapping="Wrap" Text="TextBlock" VerticalAlignment="Top" Width="264"/>
+        <Image x:Name="Logo" Grid.Row="0" Grid.Column="0" Source="http://www.aucklandlibraries.govt.nz/_layouts/images/aclibraries/logo_AC.jpg" Margin="0,0,10,0"/>
+        <!--End Header-->
+
+        <!--Body-->
+        <CaptureElement x:Name="Capture1" Grid.Row="1" Grid.Column="1" Stretch="UniformToFill" Grid.ColumnSpan="2" />
+        <Image Name="Image1" Grid.Row="1" Grid.Column="1" Stretch="UniformToFill" />
+        <!--End Body-->
+        <!--Footer Color:#749D1D #688d01 Blue:#1D3C51-->
+        <StackPanel Grid.Row="2" Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Center" Width="1097" Grid.ColumnSpan="2" >
+            <StackPanel.Resources>
+                <Style TargetType="Button">
+                    <Setter Property="Margin" Value="0,0,100,0"/>
+                </Style>
+            </StackPanel.Resources>
+            <Button x:Name="PreviewButton" Content="Preview" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Click="PreviewButton_Click_1" Width="241" Background="#1D3C51" Foreground="White" />
+            <Button x:Name="API" Content="API CALL" Click="usePhoto_Click" />
+            <Button x:Name="Photo" Content="Photo" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"  Click="Photo_Click" Width="352" Background="#1D3C51" Foreground="White" />
+
+        </StackPanel>
+
+        <!--<Button x:Name="usePhoto" Content="Use this photo?" Click="usePhoto_Click" Margin="1198,342,-41,346"/>-->
+        <!--End footer-->
+
+        <!--Side Bar-->
+        <StackPanel Orientation="Vertical" Grid.Row="1" Grid.RowSpan="2" Grid.Column="0" Background="#FF688D01">
+
+            <Button x:Name="FacePage" Content="Face" VerticalAlignment="Top" HorizontalAlignment="Stretch" Height="159.75"   FontFamily="Arial" Background="#FF688D01" Foreground="White" />
+
+            <Button x:Name="Weather" Content="Weather" VerticalAlignment="Top" HorizontalAlignment="Stretch" Height="159.75"  FontFamily="Arial" Background="#FF688D01" Foreground="White" />
+            <Button x:Name="SurpriseMe" Content="Surprise Me" VerticalAlignment="Top" HorizontalAlignment="Stretch" Height="159.75"  FontFamily="Arial" Background="#FF688D01" Foreground="White"/>
+        </StackPanel>
+        <!--Side Bar-->
+
+
+        <!--Book Results-->
+        <StackPanel x:Name="Suggestion" Grid.Row="0" Grid.Column="2"  Grid.RowSpan="3" Background="#1D3C51" Visibility="Visible" RenderTransformOrigin="0.5,0.5">
+            <StackPanel.RenderTransform>
+                <CompositeTransform TranslateX="500"/>
+            </StackPanel.RenderTransform>
+            <Button x:Name="Hide" Content="X" Foreground="Red" Click="Hide_Click"/>
+            <TextBlock x:Name="ResultTitle" Text="Tilte" FontSize="40" Foreground="White" HorizontalAlignment="Center" Padding="40" />
+            <Image x:Name="BookCover" Source="http://i357.photobucket.com/albums/oo17/nikisiasoco/noCover_zpstu6oadzq.png?t=1498800113"  HorizontalAlignment="Center" Height="400"/>
+            <TextBlock x:Name="Summary" Text="Summary:" Foreground="White" Margin="20,50,0,0" FontWeight="Bold" FontSize="30" />
+            <TextBlock x:Name="SummaryContent" Text="Summary goes here." Foreground="White" Margin="20" />
+
+
+        </StackPanel>
+
 
 
 

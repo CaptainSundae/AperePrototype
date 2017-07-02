@@ -21,6 +21,8 @@ using Windows.UI.Xaml.Media.Imaging;
 using Windows.Media.MediaProperties;
 using System.Net.Http.Headers;
 using System.Net.Http;
+using Microsoft.ProjectOxford.Face;
+using Microsoft.ProjectOxford.Face.Contract;
 
 namespace SimpleCameraApp
 {
@@ -34,16 +36,16 @@ namespace SimpleCameraApp
         private MediaCapture capture = new MediaCapture();
         public BitmapImage bImage;
         public IRandomAccessStream stream;
-        StorageFolder local = ApplicationData.Current.LocalCacheFolder;
+        StorageFolder local = ApplicationData.Current.LocalFolder;
         private string imageFileName;
-        private int imageFileNumber=0;
+        private int imageFileNumber = 0;
         private string path;
-
+        public IRandomAccessStream rasClone;
         public MainPage()
         {
             this.InitializeComponent();
         }
-        
+
         private void PreviewButton_Click_1(object sender, RoutedEventArgs e)
         {
             PreviewButton.IsEnabled = false;
@@ -52,17 +54,23 @@ namespace SimpleCameraApp
 
         private async void Photo_Click(object sender, RoutedEventArgs e)
         {
-
+            Suggestion.RenderTransform = new CompositeTransform { TranslateX = 0 };
             await TakePhoto();
 
 
 
         }
+        private void Hide_Click(object sender, RoutedEventArgs e)
+        {
+            Suggestion.RenderTransform = new CompositeTransform { TranslateX = 550 };
+            Image1.Source = null;
+        }
         private void usePhoto_Click(object sender, RoutedEventArgs e)
         {
-            faceApiCall call = new faceApiCall("C:\\Users\\USER\\AppData\\Local\\Packages\\e6204497-620b-4f81-ab82-fbd8d000332b_x3hap7anq5jnt\\LocalCache\\"+imageFileName);
-            var a = call.getResponseJSON();
-            System.Diagnostics.Debug.WriteLine(a);
+            faceApiCall rasCall = new faceApiCall(rasClone);
+            //faceApiCall call = new faceApiCall(@"C:\Users\nikis\AppData\Local\Packages\e6204497-620b-4f81-ab82-fbd8d000332b_x3hap7anq5jnt\LocalState\" + imageFileName);
+           
+
         }
 
         public async void preview()
@@ -77,34 +85,45 @@ namespace SimpleCameraApp
         {
             // Capture a image into a new stream
             ImageEncodingProperties properties = ImageEncodingProperties.CreateJpeg();
-                using (IRandomAccessStream ras = new InMemoryRandomAccessStream())
-                {
+
+            using (IRandomAccessStream ras = new InMemoryRandomAccessStream())
+            {
 
 
                 await this.capture.CapturePhotoToStreamAsync(properties, ras);
-                    await ras.FlushAsync();
+                await ras.FlushAsync();
+                // Load the image into a BitmapImage
+                ras.Seek(0);
+                var picLocation = new BitmapImage();
+                picLocation.SetSource(ras);
 
-                    // Load the image into a BitmapImage
-                    ras.Seek(0);
-                    var picLocation = new BitmapImage();
-                    picLocation.SetSource(ras);
+                //place into listview
+                var img = new Image() { Width = 200, Height = 158 };
+                img.Source = picLocation;
+                Image1.Source = picLocation;
+                //ListView1.Items.Add(img);
+                stream = ras;
+                /*
+                Stream s=ras.AsStream();
+                await s.FlushAsync();
+                    faceApiCall call=new faceApiCall(s);
+                */
+                rasClone = ras.CloneStream();
 
-                    //place into listview
-                    var img = new Image() { Width = 200, Height = 158 };                
-                    img.Source = picLocation;
-                    Image1.Source = picLocation;
-                    ListView1.Items.Add(img);
-                    stream = ras;
-                    saveFile();
+                saveFile();
 
             }
-            
+
+
+
+
 
         }
         public async void saveFile()
         {
-            imageFileName = "apereImage" + imageFileNumber + ".jpg";
+            imageFileName = "apereImage7" + imageFileNumber + ".jpg";
             imageFileNumber += 1;
+
             //Save: Start by copying the stream and loading it into a decoder
             BitmapDecoder decoder = await BitmapDecoder.CreateAsync(stream.CloneStream());
             SoftwareBitmap softBitmap = await decoder.GetSoftwareBitmapAsync();
@@ -120,6 +139,7 @@ namespace SimpleCameraApp
 
 
         }
+
 
     }
 }
