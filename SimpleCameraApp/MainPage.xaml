@@ -6,6 +6,7 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d">
+    
 
     <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
         <Grid.RowDefinitions>
@@ -18,6 +19,7 @@
             <ColumnDefinition Width="4*"/>
             <ColumnDefinition Width="2*"/>
         </Grid.ColumnDefinitions>
+        
 
         <!--Header-->
         <TextBlock x:Name="Title" Grid.Row="0" Grid.Column="1" HorizontalAlignment="Left"  Height="55" TextWrapping="Wrap" VerticalAlignment="Top" Width="793" FontSize="30" Margin="20,15,0,0" FontFamily="Arial" FontWeight="Bold" Grid.ColumnSpan="2" Grid.RowSpan="2">
@@ -29,30 +31,25 @@
         <!--End Header-->
 
         <!--Body-->
-        <CaptureElement x:Name="Capture1" Grid.Row="1" Grid.Column="1" Stretch="UniformToFill" Grid.ColumnSpan="2" />
-        <Image Name="Image1" Grid.Row="1" Grid.Column="1" Stretch="UniformToFill" />
-        <!--End Body-->
+        <CaptureElement x:Name="Capture1" Grid.Row="1" Grid.Column="1" Stretch="UniformToFill" Grid.ColumnSpan="2" Grid.RowSpan="3" />
+        <Image Name="Image1" Grid.Row="1" Grid.Column="1" Grid.RowSpan="2"  Stretch="UniformToFill" />
+        
+            <!--End Body-->
         <!--Footer Color:#749D1D #688d01 Blue:#1D3C51-->
-        <StackPanel Grid.Row="2" Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Center" Width="1097" Grid.ColumnSpan="2" >
-            <StackPanel.Resources>
-                <Style TargetType="Button">
-                    <Setter Property="Margin" Value="0,0,100,0"/>
-                </Style>
-            </StackPanel.Resources>
-            <Button x:Name="PreviewButton" Content="Preview" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Click="PreviewButton_Click_1" Width="241" Background="#1D3C51" Foreground="White" />
-            <Button x:Name="API" Content="API CALL" Click="usePhoto_Click" />
-            <Button x:Name="Photo" Content="Photo" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"  Click="Photo_Click" Width="352" Background="#1D3C51" Foreground="White" />
+        <!--"#1D3C51"-->
+        <Button x:Name="Photo" Grid.Row="3" Grid.Column="1" Grid.ColumnSpan="2" Content="Photo" HorizontalAlignment="Center" VerticalAlignment="Center"  Click="Photo_Click" Width="200" Height="100" Background="#FF688D01" Foreground="White" />
+        <Rectangle x:Name="BackButton" Grid.Row="3" Grid.Column="1" Grid.ColumnSpan="2"  Width="200" Height="100"/>
 
-        </StackPanel>
 
-        <!--<Button x:Name="usePhoto" Content="Use this photo?" Click="usePhoto_Click" Margin="1198,342,-41,346"/>-->
+            <!--<Button x:Name="usePhoto" Content="Use this photo?" Click="usePhoto_Click" Margin="1198,342,-41,346"/>-->
+        
         <!--End footer-->
 
         <!--Side Bar-->
         <StackPanel Orientation="Vertical" Grid.Row="1" Grid.RowSpan="2" Grid.Column="0" Background="#FF688D01">
 
             <Button x:Name="FacePage" Content="Face" VerticalAlignment="Top" HorizontalAlignment="Stretch" Height="159.75"   FontFamily="Arial" Background="#FF688D01" Foreground="White" />
-
+        
             <Button x:Name="Weather" Content="Weather" VerticalAlignment="Top" HorizontalAlignment="Stretch" Height="159.75"  FontFamily="Arial" Background="#FF688D01" Foreground="White" />
             <Button x:Name="SurpriseMe" Content="Surprise Me" VerticalAlignment="Top" HorizontalAlignment="Stretch" Height="159.75"  FontFamily="Arial" Background="#FF688D01" Foreground="White"/>
         </StackPanel>
@@ -65,10 +62,11 @@
                 <CompositeTransform TranslateX="500"/>
             </StackPanel.RenderTransform>
             <Button x:Name="Hide" Content="X" Foreground="Red" Click="Hide_Click"/>
-            <TextBlock x:Name="ResultTitle" Text="Tilte" FontSize="40" Foreground="White" HorizontalAlignment="Center" Padding="40" />
+            <TextBlock x:Name="ResultTitle" Text="Tilte" FontSize="40" Foreground="White" HorizontalAlignment="Center" Padding="40" TextWrapping="Wrap" />
             <Image x:Name="BookCover" Source="http://i357.photobucket.com/albums/oo17/nikisiasoco/noCover_zpstu6oadzq.png?t=1498800113"  HorizontalAlignment="Center" Height="400"/>
             <TextBlock x:Name="Summary" Text="Summary:" Foreground="White" Margin="20,50,0,0" FontWeight="Bold" FontSize="30" />
-            <TextBlock x:Name="SummaryContent" Text="Summary goes here." Foreground="White" Margin="20" />
+            <TextBlock x:Name="SummaryContent" Text="Summary goes here." Foreground="White" Margin="20" TextWrapping="Wrap" />
+            
 
 
         </StackPanel>
