@@ -24,6 +24,9 @@ using System.Net.Http;
 using Microsoft.ProjectOxford.Face;
 using Microsoft.ProjectOxford.Face.Contract;
 
+using Windows.Devices.Gpio;
+using Windows.UI.Core;
+
 namespace SimpleCameraApp
 {
     /// <summary>
@@ -31,31 +34,42 @@ namespace SimpleCameraApp
     /// </summary>
     public sealed partial class MainPage : Page
     {
-        //StorageFolder appInstalledFolder = Windows.ApplicationModel.Package.Current.InstalledLocation;
-        //StorageFolder assets = await appInstalledFolder.GetFolderAsync("Assets");
+        //Member Variables
         private MediaCapture capture = new MediaCapture();
         public BitmapImage bImage;
+
         public IRandomAccessStream stream;
-        StorageFolder local = ApplicationData.Current.LocalFolder;
+        //Clone of the photo stream
+        public IRandomAccessStream rasClone;
         private string imageFileName;
         private int imageFileNumber = 0;
+        StorageFolder local = ApplicationData.Current.LocalFolder;
         private string path;
-        public IRandomAccessStream rasClone;
+        //Recomendation features
+        //Initializing call to API by loading subscription key into the client
+        const string apiKey = "af343b3eafef43d0987a3d1a9ebf2448";
+        FaceServiceClient FaceServiceClient = new FaceServiceClient(apiKey);
+        private double age;
+        private string gender;
+        private double beard;
+        private double sideBurns;
+        private double moustache;
+
+
         public MainPage()
         {
             this.InitializeComponent();
-        }
-
-        private void PreviewButton_Click_1(object sender, RoutedEventArgs e)
-        {
-            PreviewButton.IsEnabled = false;
+            //always enable preview so preview button is no longer needed
             preview();
+
+
         }
 
         private async void Photo_Click(object sender, RoutedEventArgs e)
         {
             Suggestion.RenderTransform = new CompositeTransform { TranslateX = 0 };
             await TakePhoto();
+            makeRecommendation(rasClone);
 
 
 
@@ -65,34 +79,29 @@ namespace SimpleCameraApp
             Suggestion.RenderTransform = new CompositeTransform { TranslateX = 550 };
             Image1.Source = null;
         }
-        private void usePhoto_Click(object sender, RoutedEventArgs e)
-        {
-            faceApiCall rasCall = new faceApiCall(rasClone);
-            //faceApiCall call = new faceApiCall(@"C:\Users\nikis\AppData\Local\Packages\e6204497-620b-4f81-ab82-fbd8d000332b_x3hap7anq5jnt\LocalState\" + imageFileName);
-           
 
-        }
 
         public async void preview()
         {
+            //Initialize media
             var media = new MediaCaptureInitializationSettings();
             await this.capture.InitializeAsync(media);
+            //set media capture element in UI to the capture device and start the stream
             this.Capture1.Source = capture;
             await this.capture.StartPreviewAsync();
         }
 
         private async Task TakePhoto()
         {
-            // Capture a image into a new stream
+            // Set properties of image(jpeg) and Capture a image into a new stream
             ImageEncodingProperties properties = ImageEncodingProperties.CreateJpeg();
-
+             
             using (IRandomAccessStream ras = new InMemoryRandomAccessStream())
             {
 
-
                 await this.capture.CapturePhotoToStreamAsync(properties, ras);
                 await ras.FlushAsync();
-                // Load the image into a BitmapImage
+                // Load the image into a BitmapImage set stream to 0 for next photo
                 ras.Seek(0);
                 var picLocation = new BitmapImage();
                 picLocation.SetSource(ras);
@@ -101,24 +110,72 @@ namespace SimpleCameraApp
                 var img = new Image() { Width = 200, Height = 158 };
                 img.Source = picLocation;
                 Image1.Source = picLocation;
-                //ListView1.Items.Add(img);
-                stream = ras;
-                /*
-                Stream s=ras.AsStream();
-                await s.FlushAsync();
-                    faceApiCall call=new faceApiCall(s);
-                */
+                //Clone the stream and use this to run api call
                 rasClone = ras.CloneStream();
+            }
+        }
+        public async void makeRecommendation(IRandomAccessStream ras)
+        {
+            var att = new FaceAttributeType[] { FaceAttributeType.Age, FaceAttributeType.Gender, FaceAttributeType.Smile, FaceAttributeType.FacialHair, FaceAttributeType.Emotion, FaceAttributeType.Glasses };
 
-                saveFile();
+            using (Stream s = ras.AsStream()) //File.OpenRead(imageFilePath))
+            {
+                var a = await FaceServiceClient.DetectAsync(s, returnFaceAttributes: att);
+
+
+                for (int i = 0; i < a.Length; i++)
+                {
+                    Face face = a[i];
+                    var features = face.FaceAttributes;
+                    age = features.Age;
+                    if (features.FacialHair.Moustache >= 0.4 || features.FacialHair.Beard >= 0.4 || features.FacialHair.Sideburns >= 0.4 && features.Gender == "male")
+                    {
+                        ResultTitle.Text = "Little Book of Beards";
+                        BookCover.Source = new BitmapImage(new Uri("http://i357.photobucket.com/albums/oo17/nikisiasoco/bookOfBeards_zpsl7aqlwwa.jpg?t=1498900330"));
+                        SummaryContent.Text = "A book for men, the manliest of men. Our bearded guardians, our stubbled knights.";
+                    }
+                    else if (age < 15)
+                    {
+                        ResultTitle.Text = "Twilight";
+                        BookCover.Source = new BitmapImage(new Uri("http://i357.photobucket.com/albums/oo17/nikisiasoco/Twilightbook_zpszj9qzcry.jpg"));
+                        SummaryContent.Text = "If you like apples, theres an apple on the cover. I guess.";
+                    }
+                    else if (age > 45)
+                    {
+                        ResultTitle.Text = "The Prince";
+                        BookCover.Source = new BitmapImage(new Uri("http://i357.photobucket.com/albums/oo17/nikisiasoco/thePrince_zpsvxuexh1h.jpg"));
+                        SummaryContent.Text = "Tyranny 101.";
+                    }
+                    else if (age < 50 && age > 16)
+                    {
+                        if (features.Emotion.Happiness>0.5) {
+                            ResultTitle.Text = "You're Never Weird on the Internet";
+                            BookCover.Source = new BitmapImage(new Uri("http://i357.photobucket.com/albums/oo17/nikisiasoco/funny_zpsehbxbjtg.jpg?t=1498958983"));
+                            SummaryContent.Text = "This book is read by alot of happy adults.";
+
+                        }
+                        else {
+                            ResultTitle.Text = "Kafka on the Shore";
+                            BookCover.Source = new BitmapImage(new Uri("http://i357.photobucket.com/albums/oo17/nikisiasoco/kafkaOntheShore_zpsl85mx39u.jpg"));
+                            SummaryContent.Text = "You look like you have good taste.";
+                        }
+                        /*
+                        System.Diagnostics.Debug.WriteLine(features.FacialHair.Moustache);
+                        System.Diagnostics.Debug.WriteLine(features.FacialHair.Sideburns);
+                        System.Diagnostics.Debug.WriteLine(features.FacialHair.Beard);
+                        System.Diagnostics.Debug.WriteLine(age+"Age inside algorithm. If this works, my calculations are right");
+                        */
+                    }
+                    /*else
+                    {
+                        System.Diagnostics.Debug.WriteLine("It's still broken, you made a mistake.");
+                    }*/
+                }
 
             }
 
-
-
-
-
         }
+
         public async void saveFile()
         {
             imageFileName = "apereImage7" + imageFileNumber + ".jpg";
